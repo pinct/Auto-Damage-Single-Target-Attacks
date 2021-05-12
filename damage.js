@@ -33,6 +33,11 @@ on("chat:message", function(msg) {
         var Atk2Crit = (msg.inlinerolls[Atk2].results.rolls[0].mods != null) ? parseInt(msg.inlinerolls[Atk2].results.rolls[0].mods.customCrit[0].point) : 20;
         var Dmg1Total = parseInt(msg.inlinerolls[Dmg1].results.total);
         var Dmg2Total = parseInt(msg.inlinerolls[Dmg2].results.total);
+        var Dmg1Type = (msg.content.match(/{{dmg1type=\w+/g) != null) ? msg.content.match(/{{dmg1type=\w+/g)[0].split("=")[1] : "";
+        var Dmg2Type = (msg.content.match(/{{dmg2type=\w+/g) != null) ? msg.content.match(/{{dmg2type=\w+/g)[0].split("=")[1] : "";
+        var Crit1Dmg = parseInt(msg.inlinerolls[Crit1].results.total);
+        var Crit2Dmg = parseInt(msg.inlinerolls[Crit2].results.total);
+        var Damage = 0;
         if (msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g) != null){
             var GDmg = parseInt(msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
             var GCrit = parseInt(msg.content.match(/({{globaldamagecrit=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
@@ -100,11 +105,6 @@ on("chat:message", function(msg) {
             var SHDmg = 0;
             var SHCrit = 0;
         }
-        var Dmg1Type = (msg.content.match(/{{dmg1type=\w+/g) != null) ? msg.content.match(/{{dmg1type=\w+/g)[0].split("=")[1] : "";
-        var Dmg2Type = (msg.content.match(/{{dmg2type=\w+/g) != null) ? msg.content.match(/{{dmg2type=\w+/g)[0].split("=")[1] : "";
-        var Crit1Dmg = parseInt(msg.inlinerolls[Crit1].results.total);
-        var Crit2Dmg = parseInt(msg.inlinerolls[Crit2].results.total);
-        var Damage = 0;
         if (immunities.includes(Dmg1Type.toLowerCase())){
             Dmg1Total = 0;
             Crit1Dmg = 0;
