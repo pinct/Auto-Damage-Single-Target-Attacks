@@ -8,6 +8,8 @@ on("chat:message", function(msg) {
         var Token = getObj("graphic", TokenID);
         var CharID = (Token != null) ? Token.get("represents") : "";
         if (CharID == "") return;
+        var Char = getObj("character", CharID);
+        if (Char !== undefined && Char.get("controlledby").includes(msg.playerid)) return;
         
         var resistances = (getAttrByName(CharID, "npc_resistances") != null) ? getAttrByName(CharID, "npc_resistances").toLowerCase() : "";
         var immunities = (getAttrByName(CharID, "npc_immunities") != null) ? getAttrByName(CharID, "npc_immunities").toLowerCase() : "";
@@ -139,7 +141,6 @@ on("chat:message", function(msg) {
             var SaveDC = msg.content.match(/({{savedc=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0];
             var DC = msg.inlinerolls[SaveDC].results.total;
         }
-        
         if (Normal === 1 || Advantage === 1 || Disadvantage === 1) {
             // NORMAL
             var AtkBase = Atk1Base;
@@ -217,6 +218,21 @@ on("chat:message", function(msg) {
             }
             setTimeout(function() { sendChat("", "Enemy save = " + tokenSave)}, 1500);
             if (Damage > 0) setTimeout(function() { sendChat("", "!alter --target|" + TokenID + " --bar|3 --amount|-" + Damage) }, 1500);
+        }
+        if (Damage > 0 && Token.get("statusmarkers").includes("stopwatch")){
+            var tokenSave = Math.floor(Math.random() * 21) + getAttrByName(CharID, "constitution_save_bonus");
+            ConDC = (Math.floor(Damage/2) > 10) ? Math.floor(Damage/2) : 10;
+            if (tokenSave < ConDC){
+                sendChat("", "Failed DC of " + ConDC + " by rolling a " + tokenSave + ", dropping concentration.");
+                currentMarkers = Token.get("statusmarkers").split(',');
+                index = currentMarkers.indexOf("stopwatch");
+                if (index > -1){
+                    currentMarkers.splice(index);
+                    Token.set("statusmarkers", currentMarkers.join(','));
+                }
+            } else {
+                sendChat("", "Passed DC of " + ConDC + " by rolling a " + tokenSave + ", keeping concentration.");
+            }
         }
     }
 });
