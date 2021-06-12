@@ -10,7 +10,6 @@ on("chat:message", function(msg) {
         if (CharID == "") return;
         var Char = getObj("character", CharID);
         if (Char !== undefined && Char.get("controlledby").includes(msg.playerid)) return;
-        
         var resistances = (getAttrByName(CharID, "npc_resistances") != null) ? getAttrByName(CharID, "npc_resistances").toLowerCase() : "";
         var immunities = (getAttrByName(CharID, "npc_immunities") != null) ? getAttrByName(CharID, "npc_immunities").toLowerCase() : "";
         var vulnurabilities = (getAttrByName(CharID, "npc_vulnerabilities") != null) ? getAttrByName(CharID, "npc_vulnerabilities").toLowerCase() : "";
@@ -22,7 +21,9 @@ on("chat:message", function(msg) {
         var Dmg1 = parseInt(msg.content.match(/({{dmg1=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
         var Dmg2 = parseInt(msg.content.match(/({{dmg2=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
         var GDmg = (msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g) != null) ? parseInt(msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]) : -1;
+        var HLDmg = (msg.content.match(/({{hldmg=\$\[\[\d+\]\]}})/g) != null) ? parseInt(msg.content.match(/({{hldmg=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]) : -1;
         var GCrit = (msg.content.match(/({{globaldamagecrit=\$\[\[\d+\]\]}})/g) != null) ? parseInt(msg.content.match(/({{globaldamagecrit=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]) : 0;
+        var HLCrit = (msg.content.match(/({{hldmgcrit=\$\[\[\d+\]\]}})/g) != null) ? parseInt(msg.content.match(/({{hldmgcrit=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]) : 0;
         var Crit1 = parseInt(msg.content.match(/({{crit1=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
         var Crit2 = parseInt(msg.content.match(/({{crit2=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
         var Atk1Base = (msg.inlinerolls[Atk1].results.rolls[0].dice != 0) ? parseInt(msg.inlinerolls[Atk1].results.rolls[0].results[0].v) : 0;
@@ -38,6 +39,12 @@ on("chat:message", function(msg) {
         var Crit1Dmg = parseInt(msg.inlinerolls[Crit1].results.total);
         var Crit2Dmg = parseInt(msg.inlinerolls[Crit2].results.total);
         var Damage = 0;
+        if (HLDmg != -1){
+            var HLDmgTotal = parseInt(msg.inlinerolls[HLDmg].results.total);
+            var HLCritDmg = parseInt(msg.inlinerolls[HLCrit].results.total);
+            Dmg1Total += HLDmgTotal;
+            Crit1Dmg += HLCritDmg;
+        }
         if (msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g) != null){
             var GDmg = parseInt(msg.content.match(/({{globaldamage=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
             var GCrit = parseInt(msg.content.match(/({{globaldamagecrit=\$\[\[\d+\]\]}})/g)[0].split("[[")[1].split("]]")[0]);
