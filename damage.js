@@ -9,7 +9,7 @@ on("chat:message", function(msg) {
         var CharID = (Token != null) ? Token.get("represents") : "";
         if (CharID == "") return;
         var Char = getObj("character", CharID);
-        if (Char !== undefined && Char.get("controlledby").includes(msg.playerid)) return;
+        if (Char !== undefined && (Char.get("controlledby").includes(msg.playerid) && !((msg.content.match(/{{dmg1type=\w+/g) != null) ? msg.content.match(/{{dmg1type=\w+/g)[0].split("=")[1] : "").toLowerCase().includes("healing"))) return;
         var resistances = (getAttrByName(CharID, "npc_resistances") != null) ? getAttrByName(CharID, "npc_resistances").toLowerCase() : "";
         var immunities = (getAttrByName(CharID, "npc_immunities") != null) ? getAttrByName(CharID, "npc_immunities").toLowerCase() : "";
         var vulnurabilities = (getAttrByName(CharID, "npc_vulnerabilities") != null) ? getAttrByName(CharID, "npc_vulnerabilities").toLowerCase() : "";
@@ -210,7 +210,28 @@ on("chat:message", function(msg) {
                 } else {
                     Damage = Dmg1Total + Dmg2Total + SHDmg + GDmgTotal;
                 }
-            } else {
+            } else if (Dmg1Type.toLowerCase().includes("healing")){
+                if (resistances != ""){
+                    if (resistances.includes(Dmg1Type.toLowerCase()) && resistances.includes(Dmg2Type.toLowerCase())) {
+                        Damage = Math.floor((Dmg1Total + Dmg2Total + SHDmg)/2) + GDmgTotal;
+                    } else if (resistances.includes(Dmg1Type.toLowerCase())) {
+                        Damage = Math.floor(Dmg1Total/2) + Dmg2Total + GDmgTotal + SHDmg;
+                    } else if (resistances.includes(Dmg2Type.toLowerCase())) {
+                        Damage = Math.floor(Dmg2Total/2) + Dmg1Total + GDmgTotal + SHDmg;
+                    }
+                } else if (vulnurabilities != ""){
+                    if (vulnurabilities.includes(Dmg1Type.toLowerCase()) && vulnurabilities.includes(Dmg2Type.toLowerCase())) {
+                        Damage = ((Dmg1Total + Dmg2Total + SHDmg)*2) + GDmgTotal;
+                    } else if (vulnurabilities.includes(Dmg1Type.toLowerCase())) {
+                        Damage = (Dmg1Total*2) + Dmg2Total + GDmgTotal + SHDmg;
+                    } else if (vulnurabilities.includes(Dmg2Type.toLowerCase())) {
+                        Damage = (Dmg2Total*2) + Dmg1Total + GDmgTotal + SHDmg;
+                    }
+                } else {
+                    Damage = Dmg1Total + Dmg2Total + SHDmg + GDmgTotal;
+                }
+                if (Damage > 0) setTimeout(function() { sendChat("", "!alter --target|" + TokenID + " --bar|3 --amount|+" + Damage) }, 1500);
+            }   else {
                 Damage = 0;
             }
             //Damage = (AtkTotal >= TokenAC) ? Dmg1Total + Dmg2Total + GDmgTotal : 0;
@@ -226,7 +247,11 @@ on("chat:message", function(msg) {
             setTimeout(function() { sendChat("", "Enemy save = " + tokenSave)}, 1500);
             if (Damage > 0) setTimeout(function() { sendChat("", "!alter --target|" + TokenID + " --bar|3 --amount|-" + Damage) }, 1500);
         }
-        if (Damage > 0 && Token.get("statusmarkers").includes("stopwatch")){
+        if (Dmg1Type.toLowerCase().includes("healing")){
+            Damage = Dmg1Total + Dmg2Total + GDmgTotal;
+            setTimeout(function() { sendChat("", "!alter --target|" + TokenID + " --bar|3 --amount|+" + Damage) }, 1500);
+        }
+        if (Damage > 0 && Token.get("statusmarkers").includes("stopwatch") && !Dmg1Type.toLowerCase().includes("healing")){
             var tokenSave = Math.floor(Math.random() * 21) + getAttrByName(CharID, "constitution_save_bonus");
             ConDC = (Math.floor(Damage/2) > 10) ? Math.floor(Damage/2) : 10;
             if (tokenSave < ConDC){
